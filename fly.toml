@@ -1,7 +1,7 @@
 # fly.toml — Fly.io configuration for the Whoop MCP server
 # Replace "whoop-mcp" with your actual Fly.io app name if different
 
-app = "whoop-mcp"
+app = "fitness-tracker-whoop"
 primary_region = "sin"  # Singapore — change to your nearest region
 
 [build]

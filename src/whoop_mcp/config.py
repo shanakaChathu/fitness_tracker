@@ -9,7 +9,7 @@ WHOOP_CLIENT_SECRET: str = os.environ["WHOOP_CLIENT_SECRET"]
 WHOOP_REFRESH_TOKEN: str = os.environ["WHOOP_REFRESH_TOKEN"]
 
 # Whoop API endpoints
-WHOOP_BASE_URL = "https://api.prod.whoop.com/developer/v1"
+WHOOP_BASE_URL = "https://api.prod.whoop.com/developer"
 WHOOP_TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token"
 WHOOP_AUTH_URL = "https://api.prod.whoop.com/oauth/oauth2/auth"
 

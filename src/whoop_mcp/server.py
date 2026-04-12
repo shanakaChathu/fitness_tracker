@@ -9,6 +9,9 @@ mcp = FastMCP(
     port=int(os.getenv("PORT", "8080")),
 )
 
+# All endpoints use Whoop API v2
+# Base URL: https://api.prod.whoop.com (set in config.py)
+
 
 # ── Profile & Body ────────────────────────────────────────────────────────────
 
@@ -19,7 +22,7 @@ async def get_user_profile() -> dict:
     Get the authenticated Whoop user's basic profile information.
     Returns first name, last name, email, and user ID.
     """
-    return await whoop_get("/user/profile/basic")
+    return await whoop_get("/v2/user/profile/basic")
 
 
 @mcp.tool()
@@ -28,7 +31,7 @@ async def get_body_measurements() -> dict:
     Get body measurements on record for the user.
     Returns height (metres), weight (kilograms), and max heart rate (bpm).
     """
-    return await whoop_get("/body/measurement")
+    return await whoop_get("/v2/body/measurement")
 
 
 # ── Recovery ──────────────────────────────────────────────────────────────────
@@ -45,7 +48,7 @@ async def get_latest_recovery() -> dict:
       - spo2_percentage: Blood oxygen level
       - skin_temp_celsius: Skin temperature deviation
     """
-    records = await whoop_get_paginated("/recovery", {"limit": 1}, max_records=1)
+    records = await whoop_get_paginated("/v2/recovery", {"limit": 1}, max_records=1)
     if not records:
         return {"error": "No recovery data found"}
     return records[0]
@@ -64,7 +67,7 @@ async def get_recovery_history(days: int = 7) -> list[dict]:
     """
     days = max(1, min(days, 90))
     return await whoop_get_paginated(
-        "/recovery",
+        "/v2/recovery",
         {"start": days_ago_iso(days), "limit": 25},
         max_records=days,
     )
@@ -86,7 +89,7 @@ async def get_latest_sleep() -> dict:
       - respiratory_rate: Average breaths per minute during sleep
       - is_nap: Whether this was a nap
     """
-    records = await whoop_get_paginated("/activity/sleep", {"limit": 1}, max_records=1)
+    records = await whoop_get_paginated("/v2/activity/sleep", {"limit": 1}, max_records=1)
     if not records:
         return {"error": "No sleep data found"}
     return records[0]
@@ -105,7 +108,7 @@ async def get_sleep_history(days: int = 7) -> list[dict]:
     """
     days = max(1, min(days, 90))
     return await whoop_get_paginated(
-        "/activity/sleep",
+        "/v2/activity/sleep",
         {"start": days_ago_iso(days), "limit": 25},
         max_records=days,
     )
@@ -127,7 +130,7 @@ async def get_recent_workouts(limit: int = 10) -> list[dict]:
     """
     limit = max(1, min(limit, 50))
     return await whoop_get_paginated(
-        "/activity/workout", {"limit": 25}, max_records=limit
+        "/v2/activity/workout", {"limit": 25}, max_records=limit
     )
 
 
@@ -143,7 +146,7 @@ async def get_workouts_by_date(start_date: str, end_date: str) -> list[dict]:
     Returns all workouts logged between the two dates.
     """
     return await whoop_get_paginated(
-        "/activity/workout",
+        "/v2/activity/workout",
         {
             "start": f"{start_date}T00:00:00.000Z",
             "end": f"{end_date}T23:59:59.999Z",
@@ -163,7 +166,7 @@ async def get_latest_cycle() -> dict:
     Returns day strain score (0-21), kilojoules burned, and average/max heart rate
     for the full day.
     """
-    records = await whoop_get_paginated("/cycle", {"limit": 1}, max_records=1)
+    records = await whoop_get_paginated("/v2/cycle", {"limit": 1}, max_records=1)
     if not records:
         return {"error": "No cycle data found"}
     return records[0]
@@ -181,7 +184,7 @@ async def get_cycle_history(days: int = 7) -> list[dict]:
     """
     days = max(1, min(days, 90))
     return await whoop_get_paginated(
-        "/cycle",
+        "/v2/cycle",
         {"start": days_ago_iso(days), "limit": 25},
         max_records=days,
     )
@@ -198,9 +201,9 @@ async def get_today_summary() -> dict:
     Best tool to call when the user asks for a general daily overview.
     """
     recovery, sleep, cycle = await asyncio.gather(
-        whoop_get_paginated("/recovery", {"limit": 1}, max_records=1),
-        whoop_get_paginated("/activity/sleep", {"limit": 1}, max_records=1),
-        whoop_get_paginated("/cycle", {"limit": 1}, max_records=1),
+        whoop_get_paginated("/v2/recovery", {"limit": 1}, max_records=1),
+        whoop_get_paginated("/v2/activity/sleep", {"limit": 1}, max_records=1),
+        whoop_get_paginated("/v2/cycle", {"limit": 1}, max_records=1),
     )
     return {
         "recovery": recovery[0] if recovery else None,
@@ -220,10 +223,10 @@ async def get_weekly_summary() -> dict:
     params = {"start": start, "limit": 25}
 
     recovery, sleep, workouts, cycles = await asyncio.gather(
-        whoop_get_paginated("/recovery", params, max_records=7),
-        whoop_get_paginated("/activity/sleep", params, max_records=7),
-        whoop_get_paginated("/activity/workout", params, max_records=20),
-        whoop_get_paginated("/cycle", params, max_records=7),
+        whoop_get_paginated("/v2/recovery", params, max_records=7),
+        whoop_get_paginated("/v2/activity/sleep", params, max_records=7),
+        whoop_get_paginated("/v2/activity/workout", params, max_records=20),
+        whoop_get_paginated("/v2/cycle", params, max_records=7),
     )
 
     return {
@@ -252,10 +255,10 @@ async def get_monthly_summary() -> dict:
     params = {"start": start, "limit": 25}
 
     recovery, sleep, workouts, cycles = await asyncio.gather(
-        whoop_get_paginated("/recovery", params, max_records=30),
-        whoop_get_paginated("/activity/sleep", params, max_records=30),
-        whoop_get_paginated("/activity/workout", params, max_records=50),
-        whoop_get_paginated("/cycle", params, max_records=30),
+        whoop_get_paginated("/v2/recovery", params, max_records=30),
+        whoop_get_paginated("/v2/activity/sleep", params, max_records=30),
+        whoop_get_paginated("/v2/activity/workout", params, max_records=50),
+        whoop_get_paginated("/v2/cycle", params, max_records=30),
     )
 
     return {
@@ -282,7 +285,7 @@ def _avg(records: list[dict], *keys: str) -> float | None:
     """Extract a nested value from each record and return the average."""
     values: list[float] = []
     for record in records:
-        val: Any = record
+        val = record
         for key in keys:
             if isinstance(val, dict):
                 val = val.get(key)
@@ -301,7 +304,7 @@ def _avg(records: list[dict], *keys: str) -> float | None:
 
 
 def main() -> None:
-    mcp.run(transport="sse")
+    mcp.run(transport="streamable-http")
 
 
 if __name__ == "__main__":
