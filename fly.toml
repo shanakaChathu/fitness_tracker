@@ -1,0 +1,28 @@
+# fly.toml — Fly.io configuration for the Whoop MCP server
+# Replace "whoop-mcp" with your actual Fly.io app name if different
+
+app = "whoop-mcp"
+primary_region = "sin"  # Singapore — change to your nearest region
+
+[build]
+
+[env]
+  PORT = "8080"
+  HOST = "0.0.0.0"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false   # Keep always-on for mobile MCP access
+  auto_start_machines = true
+  min_machines_running = 1     # Always at least one machine running
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
